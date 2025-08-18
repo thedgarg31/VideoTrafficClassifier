@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="@color/samsung_blue"
+        android:pathData="M32,50v8h44v-8L32,50zM32,66v8h44v-8L32,66zM32,34v8h44v-8L32,34z"/>
+    <path
+        android:fillColor="@color/video_detected"
+        android:pathData="M22,30h8v48h-8z"/>
+    <path
+        android:fillColor="@color/non_video_detected"
+        android:pathData="M78,30h8v48h-8z"/>
+</vector>

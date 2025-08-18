@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Video Traffic Classifier</string>
+    <string name="start_classification">Start Classification</string>
+    <string name="stop_classification">Stop Classification</string>
+    <string name="status_idle">Ready to start classification</string>
+    <string name="status_running">Monitoring network traffic...</string>
+    <string name="status_video">Video Traffic Detected</string>
+    <string name="status_non_video">Non-Video Traffic</string>
+    <string name="classification_result">Classification Result</string>
+    <string name="current_status">Current Status</string>
+    <string name="samsung_ennovatex">Samsung EnnovateX 2025</string>
+    <string name="ai_challenge">AI Challenge - Problem Statement #9</string>
+    <string name="traffic_stats">Traffic Statistics</string>
+    <string name="bytes_monitored">Bytes Monitored: %s</string>
+    <string name="packets_analyzed">Packets Analyzed: %d</string>
+    <string name="video_confidence">Video Confidence: %.2f%%</string>
+</resources>

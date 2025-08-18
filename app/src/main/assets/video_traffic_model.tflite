@@ -1,0 +1,3 @@
+# This is a placeholder file for the TensorFlow Lite model
+# The actual model will be trained and converted separately
+# For now, the app will use heuristic classification as fallback

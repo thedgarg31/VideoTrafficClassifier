@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="samsung_blue">#1C63E7</color>
+    <color name="samsung_light_blue">#E3F2FD</color>
+    <color name="video_detected">#4CAF50</color>
+    <color name="non_video_detected">#FF9800</color>
+    <color name="idle_state">#9E9E9E</color>
+    <color name="background_light">#F5F5F5</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+</resources>
