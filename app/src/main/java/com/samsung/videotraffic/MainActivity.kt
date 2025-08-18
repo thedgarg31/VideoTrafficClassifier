@@ -6,12 +6,19 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PowerManager
+import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import com.samsung.videotraffic.databinding.ActivityMainBinding
@@ -78,12 +85,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun hasRequiredPermissions(): Boolean {
-        val permissions = arrayOf(
+        val permissions = mutableListOf(
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.ACCESS_WIFI_STATE
         )
+        
+        // Add conditional permissions based on Android version
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        
+        // Phone state permission is tricky, make it optional
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            permissions.add(Manifest.permission.READ_PHONE_STATE)
+        }
 
         return permissions.all { permission ->
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED

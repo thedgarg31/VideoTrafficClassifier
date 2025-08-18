@@ -58,10 +58,15 @@ class TrafficMonitorService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
-        classifier = VideoTrafficClassifier(this)
-        startForeground(NOTIFICATION_ID, createNotification())
-        startMonitoring()
+        try {
+            createNotificationChannel()
+            classifier = VideoTrafficClassifier(this)
+            startForeground(NOTIFICATION_ID, createNotification())
+            startMonitoring()
+        } catch (e: Exception) {
+            android.util.Log.e("TrafficMonitor", "Service creation failed", e)
+            stopSelf()
+        }
     }
 
     override fun onBind(intent: Intent): IBinder {
