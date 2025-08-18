@@ -53,10 +53,10 @@ This will:
 ## 🛠️ Development Environment Setup
 
 ### Requirements:
-- **Android Studio**: 2022.3.1 (Giraffe) or later
+- **Android Studio**: 2023.1.1 (Hedgehog) or later
+- **Java**: JDK 17 or higher (compatible with Java 21)
 - **Android SDK**: Level 34
-- **Java**: JDK 8 or higher
-- **Gradle**: 8.0+
+- **Gradle**: 8.12
 
 ### Optional for ML Model Training:
 - **Python**: 3.8+

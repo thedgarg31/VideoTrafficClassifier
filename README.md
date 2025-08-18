@@ -30,11 +30,12 @@ The app provides a clean, intuitive interface showing:
 
 ### Prerequisites
 
-- Android Studio 2022.3.1 (Giraffe) or later
+- Android Studio 2023.1.1 (Hedgehog) or later
+- Java Development Kit (JDK) 17 or higher (compatible with Java 21)
 - Android SDK 34
 - Minimum Android version: 7.0 (API level 24)
-- Gradle 8.0+
-- Kotlin 1.8.0+
+- Gradle 8.12
+- Kotlin 1.9.20+
 
 ### Installation & Setup
 
