@@ -155,6 +155,9 @@ class TrafficMonitorService : Service() {
             packetSizes.average().toFloat()
         } else packetSize
         
+        // Use avgPacketSize for enhanced feature calculation
+        val normalizedPacketSize = if (avgPacketSize > 0) packetSize / avgPacketSize else 1f
+        
         val avgPacketGap = if (packetIntervals.isNotEmpty()) {
             packetIntervals.average().toFloat()
         } else packetInterval

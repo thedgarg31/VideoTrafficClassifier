@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.samsung.videotraffic'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.samsung.videotraffic"
         minSdk 24
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -37,8 +37,8 @@ android {
         viewBinding true
     }
 
-    aaptOptions {
-        noCompress "tflite"
+    androidResources {
+        noCompress 'tflite'
     }
 }
 
