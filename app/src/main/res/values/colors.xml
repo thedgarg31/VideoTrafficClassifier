@@ -1,48 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- Primary Samsung Brand Colors -->
-    <color name="samsung_blue">#1C63E7</color>
-    <color name="samsung_blue_light">#E3F2FD</color>
-    <color name="samsung_dark_blue">#0D47A1</color>
+    <!-- Samsung EnnovateX 2025 Colors -->
+    <color name="samsung_light_blue">#FF0066CC</color>
+    <color name="samsung_dark_blue">#FF003366</color>
+    <color name="samsung_accent_blue">#FF0099FF</color>
+    <color name="background_light">#FFF5F5F5</color>
+    <color name="background_dark">#FF121212</color>
+    <color name="surface_light">#FFFFFFFF</color>
+    <color name="surface_dark">#FF1E1E1E</color>
+    <color name="text_primary_light">#FF000000</color>
+    <color name="text_primary_dark">#FFFFFFFF</color>
+    <color name="text_secondary_light">#FF666666</color>
+    <color name="text_secondary_dark">#FFB3B3B3</color>
     
-    <!-- Technical Modern Colors -->
-    <color name="tech_accent">#00BCD4</color>         <!-- Cyan accent -->
-    <color name="tech_dark">#263238</color>           <!-- Dark blue-grey -->
-    <color name="tech_light">#ECEFF1</color>          <!-- Light blue-grey -->
-    <color name="neon_green">#00E676</color>          <!-- Bright green -->
-    <color name="neon_orange">#FF6D00</color>         <!-- Bright orange -->
+    <!-- Traffic Classification Colors -->
+    <color name="reel_traffic_color">#FF4CAF50</color>
+    <color name="non_reel_traffic_color">#FFFF9800</color>
+    <color name="unknown_traffic_color">#FF9E9E9E</color>
+    <color name="network_normal_color">#FF4CAF50</color>
+    <color name="network_congestion_color">#FFFF5722</color>
+    <color name="network_jitter_color">#FFFFC107</color>
+    <color name="network_throttling_color">#FF9C27B0</color>
     
-    <!-- Classification Colors -->
-    <color name="video_detected">#4CAF50</color>
-    <color name="non_video_detected">#FF9800</color>
-    <color name="idle_state">#9E9E9E</color>
-    
-    <!-- Background Colors -->
-    <color name="background_primary">#FAFAFA</color>
-    <color name="background_secondary">#F5F5F5</color>
-    <color name="card_background">#FFFFFF</color>
-    <color name="card_elevated">#FDFDFD</color>
-    
-    <!-- Text Colors -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-    <color name="text_tertiary">#BDBDBD</color>
-    <color name="text_inverse">#FFFFFF</color>
-    
-    <!-- Utility Colors -->
-    <color name="divider_color">#E0E0E0</color>
-    <color name="shadow_color">#1A000000</color>
-    <color name="success">#4CAF50</color>
-    <color name="warning">#FF9800</color>
-    <color name="error">#F44336</color>
-    <color name="info">#2196F3</color>
-    
-    <!-- Chart Colors -->
-    <color name="chart_primary">#1C63E7</color>
-    <color name="chart_secondary">#00BCD4</color>
-    <color name="chart_tertiary">#4CAF50</color>
-    <color name="chart_quaternary">#FF9800</color>
+    <!-- Status Colors -->
+    <color name="status_success">#FF4CAF50</color>
+    <color name="status_warning">#FFFF9800</color>
+    <color name="status_error">#FFF44336</color>
+    <color name="status_info">#FF2196F3</color>
 </resources>
