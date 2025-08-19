@@ -347,8 +347,7 @@ This project was developed for the **Samsung EnnovateX 2025 AI Challenge**, spec
 ## 📞 Support
 
 For questions or support:
-- Create an issue on GitHub
-- Contact: [your-email@example.com]
+- Contact: [dgav3105@gmail.com]
 - Samsung EnnovateX Challenge Portal
 
 ## 🔮 Future Enhancements

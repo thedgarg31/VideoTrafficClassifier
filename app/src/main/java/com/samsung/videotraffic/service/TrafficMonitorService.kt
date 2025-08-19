@@ -296,8 +296,16 @@ class TrafficMonitorService : Service() {
     }
 
     private fun getCurrentTotalBytes(): Long {
-        // Use system traffic stats (this monitors device-wide traffic)
-        return TrafficStats.getTotalRxBytes() + TrafficStats.getTotalTxBytes()
+        // Only monitor traffic for this specific device/app rather than all network traffic
+        val uid = android.os.Process.myUid()
+        val rxBytes = TrafficStats.getUidRxBytes(uid)
+        val txBytes = TrafficStats.getUidTxBytes(uid)
+        return if (rxBytes == TrafficStats.UNSUPPORTED || txBytes == TrafficStats.UNSUPPORTED) {
+            // Fallback if per-UID stats not available
+            TrafficStats.getTotalRxBytes() + TrafficStats.getTotalTxBytes()
+        } else {
+            rxBytes + txBytes
+        }
     }
 
     private fun calculateAverageBitrate(): Float {
