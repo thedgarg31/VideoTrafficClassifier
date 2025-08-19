@@ -49,7 +49,8 @@ class TrafficMonitorService : Service() {
     companion object {
         private const val CHANNEL_ID = "VIDEO_TRAFFIC_MONITOR"
         private const val NOTIFICATION_ID = 1
-        private const val MONITORING_INTERVAL = 2000L // 2 seconds
+        private const val MONITORING_INTERVAL = 1000L // 1 second for more responsive updates
+        private const val TAG = "TrafficMonitorService"
     }
 
     inner class LocalBinder : Binder() {
@@ -107,36 +108,21 @@ class TrafficMonitorService : Service() {
         monitoringJob = null
         stopSelf()
     }
+    
+    fun isMonitoring(): Boolean {
+        return monitoringJob?.isActive == true
+    }
 
     private suspend fun analyzeTraffic() {
-        val currentTime = System.currentTimeMillis()
-        val currentTotalBytes = getCurrentTotalBytes()
-        
-        val timeDelta = currentTime - lastMeasurementTime
-        val bytesDelta = currentTotalBytes - lastTotalBytes
-        
-        if (timeDelta > 0 && bytesDelta > 0) {
-            totalBytesMonitored += bytesDelta
-            packetsAnalyzed++
+        try {
+            val currentTime = System.currentTimeMillis()
+            val currentTotalBytes = getCurrentTotalBytes()
             
-            // Estimate packet size (simplified)
-            val estimatedPacketSize = bytesDelta
-            packetSizes.add(estimatedPacketSize)
-            if (packetSizes.size > 100) packetSizes.removeAt(0) // Keep last 100
+            val timeDelta = currentTime - lastMeasurementTime
+            val bytesDelta = currentTotalBytes - lastTotalBytes
             
-            // Calculate packet interval
-            packetIntervals.add(timeDelta)
-            if (packetIntervals.size > 100) packetIntervals.removeAt(0)
-            
-            // Extract features for classification
-            val features = extractTrafficFeatures(bytesDelta, timeDelta)
-            
-            // Classify traffic
-            val result = classifier.classify(features)
-            
-            // Update LiveData on main thread
+            // Always update stats, even with no traffic
             withContext(Dispatchers.Main) {
-                _classificationResult.value = result
                 _trafficStats.value = AppTrafficStats(
                     bytesMonitored = totalBytesMonitored,
                     packetsAnalyzed = packetsAnalyzed,
@@ -144,10 +130,55 @@ class TrafficMonitorService : Service() {
                     averagePacketSize = calculateAveragePacketSize()
                 )
             }
+            
+            if (timeDelta > 0 && bytesDelta > 0) {
+                totalBytesMonitored += bytesDelta
+                packetsAnalyzed++
+                
+                // Estimate packet size (simplified)
+                val estimatedPacketSize = bytesDelta
+                packetSizes.add(estimatedPacketSize)
+                if (packetSizes.size > 100) packetSizes.removeAt(0) // Keep last 100
+                
+                // Calculate packet interval
+                packetIntervals.add(timeDelta)
+                if (packetIntervals.size > 100) packetIntervals.removeAt(0)
+                
+                // Extract features for classification
+                val features = extractTrafficFeatures(bytesDelta, timeDelta)
+                
+                // Classify traffic
+                val result = classifier.classify(features)
+                
+                // Update LiveData on main thread
+                withContext(Dispatchers.Main) {
+                    _classificationResult.value = result
+                }
+                
+                android.util.Log.d(TAG, "Traffic analyzed: ${bytesDelta} bytes, ${result.classification}")
+            } else {
+                // No new traffic, send unknown result to keep UI updated
+                withContext(Dispatchers.Main) {
+                    _classificationResult.value = ClassificationResult(
+                        ClassificationResult.Classification.UNKNOWN,
+                        0.5f
+                    )
+                }
+            }
+            
+            lastMeasurementTime = currentTime
+            lastTotalBytes = currentTotalBytes
+            
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Error analyzing traffic", e)
+            // Continue monitoring even if analysis fails
+            withContext(Dispatchers.Main) {
+                _classificationResult.value = ClassificationResult(
+                    ClassificationResult.Classification.UNKNOWN,
+                    0.5f
+                )
+            }
         }
-        
-        lastMeasurementTime = currentTime
-        lastTotalBytes = currentTotalBytes
     }
 
     private fun extractTrafficFeatures(bytesDelta: Long, timeDelta: Long): TrafficFeatures {

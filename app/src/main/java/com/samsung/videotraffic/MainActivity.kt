@@ -80,6 +80,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Add a long press listener to force restart monitoring if stuck
+        binding.btnToggle.setOnLongClickListener {
+            if (isMonitoring) {
+                Toast.makeText(this, "Force restarting monitoring...", Toast.LENGTH_SHORT).show()
+                forceRestartMonitoring()
+            }
+            true
+        }
+
         // Initialize statistics
         updateStatistics(0, 0)
     }
@@ -177,6 +186,12 @@ class MainActivity : AppCompatActivity() {
         monitorService?.trafficStats?.observe(this, Observer { stats ->
             updateStatistics(stats.bytesMonitored, stats.packetsAnalyzed)
         })
+        
+        // Check if service is actually monitoring and update UI accordingly
+        monitorService?.let { service ->
+            isMonitoring = service.isMonitoring()
+            updateUI()
+        }
     }
 
     private fun updateClassificationResult(result: ClassificationResult) {
@@ -214,6 +229,43 @@ class MainActivity : AppCompatActivity() {
         binding.tvPacketsAnalyzed.text = getString(R.string.packets_analyzed, packetsAnalyzed)
     }
 
+    private fun forceRestartMonitoring() {
+        Log.d("MainActivity", "Force restarting monitoring service")
+        
+        // Stop everything first
+        stopMonitoring()
+        
+        // Wait a moment then restart
+        binding.btnToggle.postDelayed({
+            if (hasRequiredPermissions()) {
+                startMonitoring()
+            }
+        }, 1000)
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Refresh monitoring state when returning to the app
+        if (isServiceBound && monitorService != null) {
+            val actuallyMonitoring = monitorService!!.isMonitoring()
+            if (isMonitoring != actuallyMonitoring) {
+                isMonitoring = actuallyMonitoring
+                updateUI()
+                
+                // If service stopped monitoring but we think it's still running, restart it
+                if (!actuallyMonitoring && isMonitoring) {
+                    Log.d("MainActivity", "Restarting monitoring service after return")
+                    monitorService?.startMonitoring()
+                }
+            }
+        } else if (isMonitoring) {
+            // If we think we're monitoring but service is not bound, try to reconnect
+            Log.d("MainActivity", "Attempting to reconnect to monitoring service")
+            val intent = Intent(this, TrafficMonitorService::class.java)
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        }
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
         if (isServiceBound) {

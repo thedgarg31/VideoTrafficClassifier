@@ -106,54 +106,72 @@ class VideoTrafficClassifier(private val context: Context) {
     }
 
     private fun classifyWithHeuristics(features: TrafficFeatures): ClassificationResult {
-        // Heuristic-based classification as fallback
-        var videoScore = 0f
-        var totalScore = 0f
+        try {
+            // Heuristic-based classification as fallback
+            var videoScore = 0f
+            var totalScore = 0f
 
-        // High bitrate suggests video
-        if (features.bitrate > 1_000_000) { // 1 Mbps
-            videoScore += 2f
-        } else if (features.bitrate > 500_000) { // 500 kbps
-            videoScore += 1f
+            // High bitrate suggests video
+            if (features.bitrate > 1_000_000) { // 1 Mbps
+                videoScore += 2f
+            } else if (features.bitrate > 500_000) { // 500 kbps
+                videoScore += 1f
+            } else if (features.bitrate > 100_000) { // 100 kbps
+                videoScore += 0.5f
+            }
+            totalScore += 2f
+
+            // Large packet sizes suggest video
+            if (features.packetSize > 1400) {
+                videoScore += 1f
+            } else if (features.packetSize > 500) {
+                videoScore += 0.5f
+            }
+            totalScore += 1f
+
+            // Consistent intervals suggest streaming
+            if (features.packetSizeVariation < features.packetSize * 0.3f) {
+                videoScore += 1f
+            }
+            totalScore += 1f
+
+            // High data volume over time suggests video
+            val avgBytesPerSecond = if (features.connectionDuration > 0) {
+                features.dataVolume / (features.connectionDuration / 1000f)
+            } else 0f
+            
+            if (avgBytesPerSecond > 100_000) { // 100 KB/s
+                videoScore += 1f
+            } else if (avgBytesPerSecond > 50_000) { // 50 KB/s
+                videoScore += 0.5f
+            }
+            totalScore += 1f
+
+            // Low burstiness suggests steady streaming
+            if (features.burstiness < 2f) {
+                videoScore += 1f
+            }
+            totalScore += 1f
+
+            val confidence = if (totalScore > 0) videoScore / totalScore else 0.5f
+            val isVideo = confidence > 0.5f
+
+            Log.d(TAG, "Heuristic classification: bitrate=${features.bitrate}, packetSize=${features.packetSize}, confidence=$confidence")
+
+            return ClassificationResult(
+                classification = if (isVideo) ClassificationResult.Classification.VIDEO 
+                               else ClassificationResult.Classification.NON_VIDEO,
+                confidence = confidence
+            )
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in heuristic classification: ${e.message}")
+            // Return unknown result as last resort
+            return ClassificationResult(
+                classification = ClassificationResult.Classification.UNKNOWN,
+                confidence = 0.5f
+            )
         }
-        totalScore += 2f
-
-        // Large packet sizes suggest video
-        if (features.packetSize > 1400) {
-            videoScore += 1f
-        }
-        totalScore += 1f
-
-        // Consistent intervals suggest streaming
-        if (features.packetSizeVariation < features.packetSize * 0.3f) {
-            videoScore += 1f
-        }
-        totalScore += 1f
-
-        // High data volume over time suggests video
-        val avgBytesPerSecond = if (features.connectionDuration > 0) {
-            features.dataVolume / (features.connectionDuration / 1000f)
-        } else 0f
-        
-        if (avgBytesPerSecond > 100_000) { // 100 KB/s
-            videoScore += 1f
-        }
-        totalScore += 1f
-
-        // Low burstiness suggests steady streaming
-        if (features.burstiness < 2f) {
-            videoScore += 1f
-        }
-        totalScore += 1f
-
-        val confidence = if (totalScore > 0) videoScore / totalScore else 0.5f
-        val isVideo = confidence > 0.6f
-
-        return ClassificationResult(
-            classification = if (isVideo) ClassificationResult.Classification.VIDEO 
-                           else ClassificationResult.Classification.NON_VIDEO,
-            confidence = confidence
-        )
     }
 
     private fun normalizeFeatures(features: FloatArray): FloatArray {
