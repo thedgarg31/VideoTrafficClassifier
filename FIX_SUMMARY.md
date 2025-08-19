@@ -4,14 +4,28 @@
 The app gets stuck on "check classification part" when returning from watching reels/videos on YouTube or other platforms. The monitoring appears to continue but doesn't provide real-time updates.
 
 ## Root Causes Identified
-1. **Service Lifecycle Issues**: The monitoring service might not be properly handling app backgrounding/foregrounding
-2. **State Synchronization**: The UI state and actual service monitoring state can become desynchronized
-3. **Coroutine/Thread Issues**: The monitoring coroutine might be suspended or cancelled unexpectedly
-4. **Missing Error Handling**: Lack of robust error handling when classification fails
+1. **Permission Issues**: READ_PHONE_STATE permission was causing app to hang on startup
+2. **Service Lifecycle Issues**: The monitoring service might not be properly handling app backgrounding/foregrounding
+3. **State Synchronization**: The UI state and actual service monitoring state can become desynchronized
+4. **Coroutine/Thread Issues**: The monitoring coroutine might be suspended or cancelled unexpectedly
+5. **Missing Error Handling**: Lack of robust error handling when classification fails
 
 ## Fixes Implemented
 
-### 1. MainActivity Improvements
+### 1. Permission Handling Fixes
+
+#### Removed Problematic READ_PHONE_STATE Permission
+- Completely removed READ_PHONE_STATE from AndroidManifest.xml
+- This permission was causing the app to hang during startup
+- Updated permission checking logic in MainActivity
+- App now only requests essential permissions (INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, POST_NOTIFICATIONS)
+
+#### Improved Permission Request Flow
+- Better error handling during permission requests
+- Non-blocking permission checks
+- Clearer user feedback when permissions are denied
+
+### 2. MainActivity Improvements
 
 #### Added State Synchronization in onResume()
 - Checks if the service is actually monitoring when returning to the app

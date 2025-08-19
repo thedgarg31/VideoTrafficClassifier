@@ -60,12 +60,21 @@ class TrafficMonitorService : Service() {
     override fun onCreate() {
         super.onCreate()
         try {
+            android.util.Log.d(TAG, "Creating TrafficMonitorService")
             createNotificationChannel()
             classifier = VideoTrafficClassifier(this)
             startForeground(NOTIFICATION_ID, createNotification())
             startMonitoring()
+            android.util.Log.d(TAG, "TrafficMonitorService created successfully")
         } catch (e: Exception) {
-            android.util.Log.e("TrafficMonitor", "Service creation failed", e)
+            android.util.Log.e(TAG, "Service creation failed", e)
+            // Try to send a simple notification instead of crashing
+            try {
+                createNotificationChannel()
+                startForeground(NOTIFICATION_ID, createErrorNotification(e.message))
+            } catch (notificationError: Exception) {
+                android.util.Log.e(TAG, "Failed to create error notification", notificationError)
+            }
             stopSelf()
         }
     }
@@ -272,6 +281,15 @@ class TrafficMonitorService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
+            .build()
+    }
+    
+    private fun createErrorNotification(errorMessage: String?): Notification {
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Video Traffic Classifier - Error")
+            .setContentText("Service error: ${errorMessage ?: "Unknown error"}")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 }

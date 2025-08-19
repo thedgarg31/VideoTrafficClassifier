@@ -60,11 +60,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        try {
+            binding = ActivityMainBinding.inflate(layoutInflater)
+            setContentView(binding.root)
 
-        setupUI()
-        checkPermissions()
+            setupUI()
+            checkPermissions()
+            
+            Log.d("MainActivity", "App started successfully")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error during app startup", e)
+            Toast.makeText(this, "Error starting app: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun setupUI() {
@@ -105,10 +112,7 @@ class MainActivity : AppCompatActivity() {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
         }
         
-        // Phone state permission is tricky, make it optional
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            permissions.add(Manifest.permission.READ_PHONE_STATE)
-        }
+        // Note: Removed READ_PHONE_STATE as it's not essential and causes permission issues
 
         return permissions.all { permission ->
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
@@ -122,14 +126,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestPermissions() {
-        val permissions = arrayOf(
+        val permissions = mutableListOf(
             Manifest.permission.INTERNET,
             Manifest.permission.ACCESS_NETWORK_STATE,
-            Manifest.permission.ACCESS_WIFI_STATE,
-            Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.ACCESS_WIFI_STATE
         )
+        
+        // Add notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
 
-        requestPermissionLauncher.launch(permissions)
+        requestPermissionLauncher.launch(permissions.toTypedArray())
     }
 
     private fun startMonitoring() {
