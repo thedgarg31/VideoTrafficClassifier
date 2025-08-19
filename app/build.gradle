@@ -51,9 +51,11 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
     
-    // TensorFlow Lite
+    // TensorFlow Lite - Enhanced for Samsung EnnovateX 2025
     implementation 'org.tensorflow:tensorflow-lite:2.13.0'
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.13.0'
+    implementation 'org.tensorflow:tensorflow-lite-metadata:0.4.4'
     
     // Network monitoring
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
