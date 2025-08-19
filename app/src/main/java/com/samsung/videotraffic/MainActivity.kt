@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import com.samsung.videotraffic.activity.DataHistoryActivity
 import com.samsung.videotraffic.databinding.ActivityMainBinding
 import com.samsung.videotraffic.model.ClassificationResult
 import com.samsung.videotraffic.service.TrafficMonitorService
@@ -94,6 +95,12 @@ class MainActivity : AppCompatActivity() {
                 forceRestartMonitoring()
             }
             true
+        }
+
+        // History FAB click listener
+        binding.fabHistory.setOnClickListener {
+            val intent = Intent(this, DataHistoryActivity::class.java)
+            startActivity(intent)
         }
 
         // Initialize statistics

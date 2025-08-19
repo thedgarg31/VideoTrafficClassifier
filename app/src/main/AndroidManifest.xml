@@ -35,6 +35,12 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name=".activity.DataHistoryActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.VideoTrafficClassifier" />
+        
         <!-- Background service for traffic monitoring -->
         <service
             android:name=".service.TrafficMonitorService"

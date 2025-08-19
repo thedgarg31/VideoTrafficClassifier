@@ -17,6 +17,7 @@ import com.samsung.videotraffic.ml.VideoTrafficClassifier
 import com.samsung.videotraffic.model.ClassificationResult
 import com.samsung.videotraffic.model.TrafficFeatures
 import com.samsung.videotraffic.model.TrafficStats as AppTrafficStats
+import com.samsung.videotraffic.repository.TrafficDataRepository
 import kotlinx.coroutines.*
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -27,8 +28,11 @@ class TrafficMonitorService : Service() {
     private val binder = LocalBinder()
     
     private lateinit var classifier: VideoTrafficClassifier
+    private lateinit var repository: TrafficDataRepository
     private var monitoringJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var currentSessionId: String? = null
+    private var peakBitrate: Float = 0f
     
     // LiveData for UI updates
     private val _classificationResult = MutableLiveData<ClassificationResult>()
@@ -63,6 +67,7 @@ class TrafficMonitorService : Service() {
             android.util.Log.d(TAG, "Creating TrafficMonitorService")
             createNotificationChannel()
             classifier = VideoTrafficClassifier(this)
+            repository = TrafficDataRepository.getInstance(this)
             startForeground(NOTIFICATION_ID, createNotification())
             startMonitoring()
             android.util.Log.d(TAG, "TrafficMonitorService created successfully")
@@ -96,9 +101,19 @@ class TrafficMonitorService : Service() {
     fun startMonitoring() {
         if (monitoringJob?.isActive == true) return
         
+        serviceScope.launch {
+            try {
+                currentSessionId = repository.startNewSession()
+                android.util.Log.d(TAG, "Started new monitoring session: $currentSessionId")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Failed to start session", e)
+            }
+        }
+        
         startTime = System.currentTimeMillis()
         lastMeasurementTime = startTime
         lastTotalBytes = getCurrentTotalBytes()
+        peakBitrate = 0f
         
         monitoringJob = serviceScope.launch {
             while (isActive) {
@@ -113,8 +128,18 @@ class TrafficMonitorService : Service() {
     }
 
     fun stopMonitoring() {
+        serviceScope.launch {
+            try {
+                repository.endCurrentSession()
+                android.util.Log.d(TAG, "Ended monitoring session")
+            } catch (e: Exception) {
+                android.util.Log.e(TAG, "Failed to end session", e)
+            }
+        }
+        
         monitoringJob?.cancel()
         monitoringJob = null
+        currentSessionId = null
         stopSelf()
     }
     
@@ -158,6 +183,35 @@ class TrafficMonitorService : Service() {
                 
                 // Classify traffic
                 val result = classifier.classify(features)
+                
+                // Record classification in database
+                try {
+                    repository.recordClassification(
+                        result = result,
+                        bytesAnalyzed = bytesDelta,
+                        bitrate = features.bitrate,
+                        packetSize = features.packetSize,
+                        packetInterval = features.packetInterval,
+                        burstiness = features.burstiness,
+                        connectionDuration = features.connectionDuration,
+                        dataVolume = features.dataVolume
+                    )
+                    
+                    // Update peak bitrate
+                    if (features.bitrate > peakBitrate) {
+                        peakBitrate = features.bitrate
+                    }
+                    
+                    // Update session stats
+                    repository.updateSessionStats(
+                        bytes = totalBytesMonitored,
+                        packets = packetsAnalyzed,
+                        avgBitrate = calculateAverageBitrate(),
+                        peakBitrate = peakBitrate
+                    )
+                } catch (e: Exception) {
+                    android.util.Log.e(TAG, "Failed to record classification", e)
+                }
                 
                 // Update LiveData on main thread
                 withContext(Dispatchers.Main) {
