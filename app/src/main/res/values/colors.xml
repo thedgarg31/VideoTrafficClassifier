@@ -35,4 +35,21 @@
     <color name="status_warning">#FFFF9800</color>
     <color name="status_error">#FFF44336</color>
     <color name="status_info">#FF2196F3</color>
+
+    <!-- Additional UI Colors (aliases used in layouts) -->
+    <color name="tech_dark">#FF0E0E0E</color>
+    <color name="background_primary">@color/background_light</color>
+    <color name="card_background">@color/surface_light</color>
+    <color name="card_elevated">@color/surface_light</color>
+    <color name="text_primary">@color/text_primary_light</color>
+    <color name="text_secondary">@color/text_secondary_light</color>
+    <color name="tech_accent">@color/samsung_accent_blue</color>
+    <color name="neon_green">#FF00E676</color>
+    <color name="neon_orange">#FFFF9800</color>
+    <color name="idle_state">#FF9E9E9E</color>
+    <color name="samsung_blue">@color/samsung_light_blue</color>
+    <color name="samsung_blue_light">#FF33A3FF</color>
+    <color name="video_detected">#FF4CAF50</color>
+    <color name="non_video_detected">#FFFF9800</color>
+    <color name="divider_color">#1F000000</color>
 </resources>
