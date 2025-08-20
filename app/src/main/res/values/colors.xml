@@ -52,4 +52,5 @@
     <color name="video_detected">#FF4CAF50</color>
     <color name="non_video_detected">#FFFF9800</color>
     <color name="divider_color">#1F000000</color>
+    <color name="tech_light">#FFF8F8F8</color>
 </resources>
