@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
+import com.samsung.videotraffic.activity.DataHistoryActivity
 import com.samsung.videotraffic.service.AdvancedTrafficMonitorService
 import com.samsung.videotraffic.service.BatteryMonitorService
 import com.samsung.videotraffic.viewmodel.MainViewModel
@@ -159,9 +160,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateBatteryStats(stats: com.samsung.videotraffic.model.BatteryStats?) {
         stats?.let {
             batteryLevelText.text = "${it.currentBatteryLevel}%"
-            batteryDrainText.text = "${String.format("%.1f", it.getBatteryDrainPercentage())}%"
-            monitoringDurationText.text = "${it.getMonitoringDurationMinutes()} min"
-            batteryDrainPerMinText.text = "${String.format("%.2f", it.getBatteryDrainPerMinute())}%/min"
+            batteryDrainText.text = "${String.format("%.1f", it.batteryDrainPercentage)}%"
+            monitoringDurationText.text = "${it.monitoringDurationMinutes} min"
+            batteryDrainPerMinText.text = "${String.format("%.2f", it.batteryDrainPerMinute)}%/min"
         } ?: run {
             batteryLevelText.text = "--%"
             batteryDrainText.text = "--%"

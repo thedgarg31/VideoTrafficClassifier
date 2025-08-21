@@ -111,9 +111,9 @@ class TrafficDataRepository private constructor(context: Context) {
                 
                 // Update session counters
                 when (result.classification) {
-                    ClassificationResult.Classification.VIDEO -> sessionDao.incrementVideoDetections(sessionId)
-                    ClassificationResult.Classification.NON_VIDEO -> sessionDao.incrementNonVideoDetections(sessionId)
-                    ClassificationResult.Classification.UNKNOWN -> sessionDao.incrementUnknownDetections(sessionId)
+                    ClassificationResult.Classification.REEL -> sessionDao.incrementVideoDetections(sessionId)
+                    ClassificationResult.Classification.NON_REEL -> sessionDao.incrementNonVideoDetections(sessionId)
+                    ClassificationResult.Classification.UNKNOWN -> { /* No increment for unknown */ }
                 }
             }
         }

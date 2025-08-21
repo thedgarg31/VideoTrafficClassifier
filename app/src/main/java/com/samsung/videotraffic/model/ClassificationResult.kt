@@ -6,8 +6,8 @@ data class ClassificationResult(
     val timestamp: Long = System.currentTimeMillis()
 ) {
     enum class Classification {
-        VIDEO,
-        NON_VIDEO,
+        REEL,
+        NON_REEL,
         UNKNOWN
     }
 }

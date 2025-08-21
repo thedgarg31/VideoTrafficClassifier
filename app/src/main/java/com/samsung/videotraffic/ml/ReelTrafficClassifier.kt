@@ -62,7 +62,7 @@ class ReelTrafficClassifier(private val context: Context) {
     data class FeatureScaler(
         val mean: FloatArray,
         val scale: FloatArray,
-        val var: FloatArray
+        val variance: FloatArray
     ) {
         fun transform(features: FloatArray): FloatArray {
             return features.mapIndexed { index, value ->
@@ -218,9 +218,10 @@ class ReelTrafficClassifier(private val context: Context) {
             val maxIndex = softmaxOutput.indices.maxByOrNull { softmaxOutput[it] } ?: 2
             val confidence = softmaxOutput[maxIndex]
             
+            // Map output to classification
             val classification = when (maxIndex) {
-                0 -> ClassificationResult.Classification.NON_VIDEO
-                1 -> ClassificationResult.Classification.VIDEO
+                0 -> ClassificationResult.Classification.NON_REEL
+                1 -> ClassificationResult.Classification.REEL
                 else -> ClassificationResult.Classification.UNKNOWN
             }
 
@@ -382,8 +383,8 @@ class ReelTrafficClassifier(private val context: Context) {
 
             val classification = when {
                 isUnknown -> ClassificationResult.Classification.UNKNOWN
-                isReel -> ClassificationResult.Classification.VIDEO
-                else -> ClassificationResult.Classification.NON_VIDEO
+                isReel -> ClassificationResult.Classification.REEL
+                else -> ClassificationResult.Classification.NON_REEL
             }
 
             Log.d(TAG, "Advanced heuristic classification: $classification (confidence: $confidence)")
@@ -406,10 +407,10 @@ class ReelTrafficClassifier(private val context: Context) {
         val sum = values.sum()
         if (sum == 0f) return 0f
         
-        return -values.sumOf { value ->
+        return -values.map { value ->
             val p = value / sum
-            if (p > 0) p * log(p.toDouble()) else 0.0
-        }.toFloat()
+            if (p > 0) p * kotlin.math.ln(p.toDouble()) else 0.0
+        }.sum().toFloat()
     }
 
     private fun calculateFlowChurnRate(features: TrafficFeatures): Float {

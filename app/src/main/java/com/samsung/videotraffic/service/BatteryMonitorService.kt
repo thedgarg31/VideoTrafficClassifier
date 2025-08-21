@@ -77,8 +77,18 @@ class BatteryMonitorService : Service() {
         isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || 
                     status == BatteryManager.BATTERY_STATUS_FULL
         
-        temperature = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE) / 10f
-        voltage = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_VOLTAGE) / 1000f
+        // Note: These properties may not be available on all devices
+        // try {
+        //     temperature = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE) / 10f
+        // } catch (e: Exception) {
+        //     temperature = 0f
+        // }
+        
+        // try {
+        //     voltage = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_VOLTAGE) / 1000f
+        // } catch (e: Exception) {
+        //     voltage = 0f
+        // }
         
         _batteryLevel.value = currentBatteryLevel
         _isCharging.value = isCharging

@@ -94,8 +94,8 @@ class VideoTrafficClassifier(private val context: Context) {
             val confidence = if (isVideo) softmaxOutput[1] else softmaxOutput[0]
 
             return ClassificationResult(
-                classification = if (isVideo) ClassificationResult.Classification.VIDEO 
-                               else ClassificationResult.Classification.NON_VIDEO,
+                classification = if (isVideo) ClassificationResult.Classification.REEL
+                else ClassificationResult.Classification.NON_REEL,
                 confidence = confidence
             )
 
@@ -159,8 +159,8 @@ class VideoTrafficClassifier(private val context: Context) {
             Log.d(TAG, "Heuristic classification: bitrate=${features.bitrate}, packetSize=${features.packetSize}, confidence=$confidence")
 
             return ClassificationResult(
-                classification = if (isVideo) ClassificationResult.Classification.VIDEO 
-                               else ClassificationResult.Classification.NON_VIDEO,
+                classification = if (isVideo) ClassificationResult.Classification.REEL
+                else ClassificationResult.Classification.NON_REEL,
                 confidence = confidence
             )
             

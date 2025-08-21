@@ -300,7 +300,7 @@ class TrafficMonitorService : Service() {
         val uid = android.os.Process.myUid()
         val rxBytes = TrafficStats.getUidRxBytes(uid)
         val txBytes = TrafficStats.getUidTxBytes(uid)
-        return if (rxBytes == TrafficStats.UNSUPPORTED || txBytes == TrafficStats.UNSUPPORTED) {
+        return if (rxBytes == TrafficStats.UNSUPPORTED.toLong() || txBytes == TrafficStats.UNSUPPORTED.toLong()) {
             // Fallback if per-UID stats not available
             TrafficStats.getTotalRxBytes() + TrafficStats.getTotalTxBytes()
         } else {

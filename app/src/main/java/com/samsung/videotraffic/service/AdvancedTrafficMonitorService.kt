@@ -9,6 +9,7 @@ import android.net.TrafficStats
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -228,7 +229,7 @@ class AdvancedTrafficMonitorService : Service() {
             withContext(Dispatchers.Main) {
                 _trafficStats.value = AppTrafficStats(
                     bytesMonitored = totalBytesMonitored.get(),
-                    packetsAnalyzed = packetsAnalyzed.get(),
+                    packetsAnalyzed = packetsAnalyzed.get().toInt(),
                     averageBitrate = calculateAverageBitrate(),
                     averagePacketSize = calculateAveragePacketSize()
                 )
@@ -250,8 +251,8 @@ class AdvancedTrafficMonitorService : Service() {
                 
                 // Update detection counters
                 when (result.classification) {
-                    ClassificationResult.Classification.VIDEO -> reelDetections.incrementAndGet()
-                    ClassificationResult.Classification.NON_VIDEO -> nonReelDetections.incrementAndGet()
+                    ClassificationResult.Classification.REEL -> reelDetections.incrementAndGet()
+                    ClassificationResult.Classification.NON_REEL -> nonReelDetections.incrementAndGet()
                     ClassificationResult.Classification.UNKNOWN -> unknownDetections.incrementAndGet()
                 }
                 
@@ -276,7 +277,7 @@ class AdvancedTrafficMonitorService : Service() {
                     // Update session stats
                     repository.updateSessionStats(
                         bytes = totalBytesMonitored.get(),
-                        packets = packetsAnalyzed.get(),
+                        packets = packetsAnalyzed.get().toInt(),
                         avgBitrate = calculateAverageBitrate(),
                         peakBitrate = peakBitrate
                     )
@@ -503,7 +504,7 @@ class AdvancedTrafficMonitorService : Service() {
         val uid = android.os.Process.myUid()
         val rxBytes = TrafficStats.getUidRxBytes(uid)
         val txBytes = TrafficStats.getUidTxBytes(uid)
-        return if (rxBytes == TrafficStats.UNSUPPORTED || txBytes == TrafficStats.UNSUPPORTED) {
+        return if (rxBytes == TrafficStats.UNSUPPORTED.toLong() || txBytes == TrafficStats.UNSUPPORTED.toLong()) {
             TrafficStats.getTotalRxBytes() + TrafficStats.getTotalTxBytes()
         } else {
             rxBytes + txBytes

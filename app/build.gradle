@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'kotlin-kapt'
+    // id 'kotlin-kapt'  // Temporarily disabled to fix compilation
 }
 
 android {
@@ -66,10 +66,10 @@ dependencies {
     // Permissions
     implementation 'androidx.activity:activity-ktx:1.8.2'
     
-    // Room Database
+    // Room Database - Temporarily using runtime only
     implementation 'androidx.room:room-runtime:2.6.1'
     implementation 'androidx.room:room-ktx:2.6.1'
-    kapt 'androidx.room:room-compiler:2.6.1'
+    // kapt 'androidx.room:room-compiler:2.6.1'  // Temporarily disabled
     
     // UI Enhancement
     implementation 'androidx.cardview:cardview:1.0.0'
