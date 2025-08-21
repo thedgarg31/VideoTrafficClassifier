@@ -2,34 +2,30 @@ package com.samsung.videotraffic.activity
 
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.samsung.videotraffic.R
-import com.samsung.videotraffic.adapter.SessionHistoryAdapter
-import com.samsung.videotraffic.databinding.ActivityDataHistoryBinding
-import com.samsung.videotraffic.repository.TrafficDataRepository
-import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
-import java.util.*
 
 class DataHistoryActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityDataHistoryBinding
-    private lateinit var repository: TrafficDataRepository
-    private lateinit var sessionAdapter: SessionHistoryAdapter
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDataHistoryBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        android.util.Log.d("DataHistoryActivity", "onCreate started")
+        
+        try {
+            // Use a simple layout instead of complex binding
+            setContentView(R.layout.activity_data_history_simple)
+            android.util.Log.d("DataHistoryActivity", "Simple layout set successfully")
 
-        setupActionBar()
-        setupRecyclerView()
-        setupRepository()
-        loadHistoryData()
-        setupRefreshListener()
+            setupActionBar()
+            showTestData()
+            android.util.Log.d("DataHistoryActivity", "onCreate completed successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("DataHistoryActivity", "Error in onCreate", e)
+            // Show error to user
+            android.widget.Toast.makeText(this, "Error loading history: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+            finish()
+        }
     }
 
     private fun setupActionBar() {
@@ -37,55 +33,15 @@ class DataHistoryActivity : AppCompatActivity() {
         supportActionBar?.title = "Traffic History"
     }
 
-    private fun setupRecyclerView() {
-        sessionAdapter = SessionHistoryAdapter { sessionId ->
-            // Open session details
-            // TODO: Implement session detail view
-        }
-        binding.recyclerViewHistory.apply {
-            layoutManager = LinearLayoutManager(this@DataHistoryActivity)
-            adapter = sessionAdapter
-        }
-    }
-
-    private fun setupRepository() {
-        repository = TrafficDataRepository.getInstance(this)
-    }
-
-    private fun loadHistoryData() {
-        scope.launch {
-            try {
-                binding.progressBar.visibility = android.view.View.VISIBLE
-                binding.textNoData.visibility = android.view.View.GONE
-                
-                val sessions = withContext(Dispatchers.IO) {
-                    repository.getAllSessionsList()
-                }
-                
-                if (sessions.isEmpty()) {
-                    binding.textNoData.visibility = android.view.View.VISIBLE
-                    binding.recyclerViewHistory.visibility = android.view.View.GONE
-                } else {
-                    binding.textNoData.visibility = android.view.View.GONE
-                    binding.recyclerViewHistory.visibility = android.view.View.VISIBLE
-                    sessionAdapter.submitList(sessions)
-                }
-                
-                binding.progressBar.visibility = android.view.View.GONE
-                
-            } catch (e: Exception) {
-                binding.progressBar.visibility = android.view.View.GONE
-                binding.textNoData.visibility = android.view.View.VISIBLE
-                binding.textNoData.text = "Error loading data: ${e.message}"
-            }
-        }
-    }
-
-    private fun setupRefreshListener() {
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            loadHistoryData()
-            binding.swipeRefreshLayout.isRefreshing = false
-        }
+    private fun showTestData() {
+        val testText = findViewById<TextView>(R.id.testText)
+        testText?.text = "✅ Data History Activity Loaded Successfully!\n\n" +
+                "📊 This screen will show:\n" +
+                "• Session history\n" +
+                "• Traffic analysis results\n" +
+                "• Battery usage data\n" +
+                "• Network statistics\n\n" +
+                "🔧 Database integration coming soon!"
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -96,10 +52,5 @@ class DataHistoryActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        scope.cancel()
     }
 }

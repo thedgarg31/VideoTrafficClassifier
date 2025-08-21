@@ -104,8 +104,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         historyButton.setOnClickListener {
-            val intent = Intent(this, DataHistoryActivity::class.java)
-            startActivity(intent)
+            try {
+                android.util.Log.d("MainActivity", "History button clicked")
+                val intent = Intent(this, DataHistoryActivity::class.java)
+                startActivity(intent)
+                android.util.Log.d("MainActivity", "DataHistoryActivity intent started")
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error starting DataHistoryActivity", e)
+                // Show a simple toast message to the user
+                android.widget.Toast.makeText(this, "Error opening history: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
 
         shareButton.setOnClickListener {
