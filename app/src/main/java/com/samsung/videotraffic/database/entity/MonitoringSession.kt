@@ -20,4 +20,5 @@ data class MonitoringSession(
     val averageBitrate: Float = 0f,
     val peakBitrate: Float = 0f,
     val isActive: Boolean = true
+    
 )
