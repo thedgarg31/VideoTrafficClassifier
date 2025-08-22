@@ -14,9 +14,14 @@ import com.samsung.videotraffic.activity.DataHistoryActivity
 import com.samsung.videotraffic.service.AdvancedTrafficMonitorService
 import com.samsung.videotraffic.service.BatteryMonitorService
 import com.samsung.videotraffic.viewmodel.MainViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + kotlinx.coroutines.SupervisorJob())
     private lateinit var statusText: TextView
     private lateinit var startButton: MaterialButton
     private lateinit var stopButton: MaterialButton
@@ -90,6 +95,14 @@ class MainActivity : AppCompatActivity() {
         viewModel.batteryStats.observe(this) { stats ->
             updateBatteryStats(stats)
         }
+
+        // Observe confidence
+        viewModel.confidence.observe(this) { confidence ->
+            updateConfidenceDisplay(confidence)
+        }
+
+        // Start periodic data refresh
+        startPeriodicDataRefresh()
     }
 
     private fun setupClickListeners() {
@@ -117,7 +130,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         shareButton.setOnClickListener {
-            shareData()
+            try {
+                android.util.Log.d("MainActivity", "Share button clicked")
+                shareData()
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error sharing data", e)
+                android.widget.Toast.makeText(this, "Error sharing data: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -208,8 +227,83 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shareData() {
-        // Implement data sharing functionality
-        // This could export data to CSV, share via email, etc.
+        scope.launch {
+            try {
+                val report = buildString {
+                    appendLine("📊 Video Traffic Classifier - Data Report")
+                    appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
+                    appendLine()
+                    
+                    // Current status
+                    viewModel.isMonitoring.value?.let { isMonitoring ->
+                        appendLine("🔍 Monitoring Status: ${if (isMonitoring) "ACTIVE" else "STOPPED"}")
+                    }
+                    appendLine()
+                    
+                    // Battery stats
+                    viewModel.batteryStats.value?.let { stats ->
+                        appendLine("🔋 Battery Statistics:")
+                        appendLine("   • Current Level: ${stats.currentBatteryLevel}%")
+                        appendLine("   • Drain: ${String.format("%.1f", stats.batteryDrainPercentage)}%")
+                        appendLine("   • Duration: ${stats.monitoringDurationMinutes} minutes")
+                        appendLine("   • Drain Rate: ${String.format("%.2f", stats.batteryDrainPerMinute)}%/min")
+                        appendLine()
+                    }
+                    
+                    // Classification results
+                    viewModel.currentClassification.value?.let { classification ->
+                        appendLine("🎯 Current Classification: $classification")
+                    }
+                    viewModel.confidence.value?.let { confidence ->
+                        appendLine("📈 Confidence: ${String.format("%.1f", confidence)}%")
+                    }
+                    appendLine()
+                    
+                    // Network stats
+                    viewModel.networkStats.value?.let { stats ->
+                        appendLine("🌐 Network Statistics:")
+                        appendLine("   • $stats")
+                        appendLine()
+                    }
+                    
+                    // Session history
+                    try {
+                        val repository = com.samsung.videotraffic.repository.TrafficDataRepository.getInstance(this@MainActivity)
+                        val sessions = withContext(Dispatchers.IO) {
+                            repository.getAllSessionsList()
+                        }
+                        
+                        if (sessions.isNotEmpty()) {
+                            appendLine("📋 Session History (Last 5 sessions):")
+                            sessions.take(5).forEach { session ->
+                                appendLine("   • Session ${session.id}: ${session.startTime} - ${session.endTime ?: "Ongoing"}")
+                                appendLine("     Duration: ${session.durationMinutes} min, Packets: ${session.totalPackets}")
+                            }
+                        } else {
+                            appendLine("📋 No sessions recorded yet")
+                        }
+                    } catch (e: Exception) {
+                        appendLine("📋 Session data unavailable: ${e.message}")
+                    }
+                    
+                    appendLine()
+                    appendLine("📱 App: Video Traffic Classifier")
+                    appendLine("🔗 GitHub: https://github.com/thedgarg31/VideoTrafficClassifier")
+                }
+                
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(android.content.Intent.EXTRA_SUBJECT, "Video Traffic Classifier - Data Report")
+                    putExtra(android.content.Intent.EXTRA_TEXT, report)
+                }
+                
+                startActivity(android.content.Intent.createChooser(intent, "Share Data Report"))
+                
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Error creating share report", e)
+                android.widget.Toast.makeText(this@MainActivity, "Error creating report: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun checkPermissions(): Boolean {
@@ -246,6 +340,35 @@ class MainActivity : AppCompatActivity() {
             } else {
                 // Some permissions denied
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
+    }
+
+    private fun startPeriodicDataRefresh() {
+        scope.launch {
+            while (true) {
+                delay(2000) // Refresh every 2 seconds
+                refreshDisplayData()
+            }
+        }
+    }
+
+    private fun refreshDisplayData() {
+        // Force refresh of all displayed data
+        viewModel.refreshData()
+    }
+
+    private fun updateConfidenceDisplay(confidence: Float?) {
+        confidence?.let {
+            confidenceText.text = "Confidence: ${String.format("%.1f", it)}%"
+            confidenceText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary_light))
+        } ?: run {
+            confidenceText.text = "Confidence: --%"
+            confidenceText.setTextColor(ContextCompat.getColor(this, R.color.text_secondary_light))
         }
     }
 }

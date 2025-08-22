@@ -51,46 +51,69 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Monitoring Status"
-                        android:textColor="@color/text_primary_light"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
 
-                    <TextView
-                        android:id="@+id/statusText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Stopped"
-                        android:textColor="@color/status_error"
-                        android:textSize="16sp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔍 Monitoring Status"
+                            android:textColor="@color/text_primary_light"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:background="@color/divider_color"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp" />
+
+                        <TextView
+                            android:id="@+id/statusText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Stopped"
+                            android:textColor="@color/status_error"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:padding="8dp"
+                            android:background="@drawable/status_background" />
+
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
                         android:orientation="horizontal">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/startButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
-                            android:text="Start Monitoring"
-                            app:backgroundTint="@color/status_success" />
+                            android:layout_marginEnd="8dp"
+                            android:text="▶️ Start Monitoring"
+                            android:textSize="14sp"
+                            app:backgroundTint="@color/status_success"
+                            app:icon="@drawable/ic_monitoring" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/stopButton"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
                             android:layout_weight="1"
-                            android:text="Stop Monitoring"
-                            app:backgroundTint="@color/status_error" />
+                            android:layout_marginStart="8dp"
+                            android:text="⏹️ Stop"
+                            android:textSize="14sp"
+                            android:enabled="false"
+                            app:backgroundTint="@color/status_error"
+                            app:icon="@drawable/ic_monitoring" />
 
                     </LinearLayout>
 
@@ -98,7 +121,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Battery Stats Card -->
+            <!-- Battery Statistics Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -118,81 +141,105 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Battery Usage"
+                        android:text="🔋 Battery Statistics"
                         android:textColor="@color/text_primary_light"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Current Level: "
-                            android:textColor="@color/text_secondary_light" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginEnd="6dp">
 
-                        <TextView
-                            android:id="@+id/batteryLevelText"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Current Level"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/batteryLevelText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--%"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="--%"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_marginEnd="6dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Drain"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/batteryDrainText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--%"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Duration"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/monitoringDurationText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="-- min"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="20sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Drain: "
-                            android:textColor="@color/text_secondary_light" />
-
-                        <TextView
-                            android:id="@+id/batteryDrainText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--%"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Duration: "
-                            android:textColor="@color/text_secondary_light" />
-
-                        <TextView
-                            android:id="@+id/monitoringDurationText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="-- min"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
                         android:orientation="horizontal">
 
                         <TextView
@@ -235,28 +282,38 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Traffic Classification"
+                        android:text="🎯 Traffic Classification"
                         android:textColor="@color/text_primary_light"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
 
-                    <TextView
-                        android:id="@+id/classificationText"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="No traffic detected"
-                        android:textColor="@color/text_secondary_light"
-                        android:textSize="16sp" />
+                        android:orientation="vertical"
+                        android:background="@drawable/status_background"
+                        android:padding="16dp">
 
-                    <TextView
-                        android:id="@+id/confidenceText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text=""
-                        android:textColor="@color/text_secondary_light"
-                        android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/classificationText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No traffic detected"
+                            android:textColor="@color/text_secondary_light"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <TextView
+                            android:id="@+id/confidenceText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Confidence: --%"
+                            android:textColor="@color/text_secondary_light"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
@@ -282,74 +339,99 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Network Statistics"
+                        android:text="🌐 Network Statistics"
                         android:textColor="@color/text_primary_light"
                         android:textSize="18sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Bytes Sent: "
-                            android:textColor="@color/text_secondary_light" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginEnd="6dp">
 
-                        <TextView
-                            android:id="@+id/bytesSentText"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Bytes Sent"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/bytesSentText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp"
+                            android:layout_marginEnd="6dp">
 
-                    </LinearLayout>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Bytes Received"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
+                            <TextView
+                                android:id="@+id/bytesReceivedText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Bytes Received: "
-                            android:textColor="@color/text_secondary_light" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:background="@drawable/status_background"
+                            android:padding="12dp"
+                            android:layout_marginStart="6dp">
 
-                        <TextView
-                            android:id="@+id/bytesReceivedText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Network Condition"
+                                android:textColor="@color/text_secondary_light"
+                                android:textSize="12sp" />
 
-                    </LinearLayout>
+                            <TextView
+                                android:id="@+id/networkConditionText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/samsung_dark_blue"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Network Condition: "
-                            android:textColor="@color/text_secondary_light" />
-
-                        <TextView
-                            android:id="@+id/networkConditionText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="@color/text_primary_light"
-                            android:textStyle="bold" />
+                        </LinearLayout>
 
                     </LinearLayout>
 
@@ -367,19 +449,25 @@
                     android:id="@+id/historyButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="View Data History"
+                    android:layout_marginBottom="12dp"
+                    android:text="📊 View Data History"
+                    android:textSize="16sp"
                     app:backgroundTint="@color/samsung_light_blue"
-                    app:icon="@drawable/ic_history" />
+                    app:icon="@drawable/ic_history"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/shareButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:text="Share Data"
+                    android:text="📤 Share Data Report"
+                    android:textSize="16sp"
                     app:backgroundTint="@color/samsung_accent_blue"
-                    app:icon="@drawable/ic_share" />
+                    app:icon="@drawable/ic_share"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
 
             </LinearLayout>
 

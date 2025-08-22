@@ -55,4 +55,13 @@ class MainViewModel : ViewModel() {
         _currentClassification.value = null
         _confidence.value = 0f
     }
+
+    fun refreshData() {
+        // Force refresh of all data
+        _isMonitoring.value = _isMonitoring.value
+        _currentClassification.value = _currentClassification.value
+        _networkStats.value = _networkStats.value
+        _batteryStats.value = _batteryStats.value
+        _confidence.value = _confidence.value
+    }
 }
