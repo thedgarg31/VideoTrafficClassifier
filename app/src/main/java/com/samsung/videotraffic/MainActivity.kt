@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
                             appendLine("📋 Session History (Last 5 sessions):")
                             sessions.take(5).forEach { session ->
                                 appendLine("   • Session ${session.id}: ${session.startTime} - ${session.endTime ?: "Ongoing"}")
-                                appendLine("     Duration: ${session.durationMinutes} min, Packets: ${session.totalPackets}")
+                                appendLine("Duration: ${session.durationMinutes} min, Packets: ${session.totalPackets}")
                             }
                         } else {
                             appendLine("📋 No sessions recorded yet")
@@ -342,6 +342,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    private val scope = CoroutineScope(Dispatchers.Main + Job())
 
     override fun onDestroy() {
         super.onDestroy()
