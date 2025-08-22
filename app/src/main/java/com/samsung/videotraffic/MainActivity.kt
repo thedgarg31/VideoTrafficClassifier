@@ -342,8 +342,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    private val scope = CoroutineScope(Dispatchers.Main + Job())
-
+    
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
