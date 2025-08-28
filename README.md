@@ -1,9 +1,11 @@
 
 # Samsung EnnovateX 2025 AI Challenge Submission
 
-- **Problem Statement** - *(Must exactly match one of the nine Samsung EnnovateX AI Challenge Problem Statements)*
-- **Team name** - *(As provided during the time of registration)*
-- **Team members (Names)** - *Member 1 Name*, *Member 2 Name*, *Member 3 Name*, *Member 4 Name* 
+- **Problem Statement** - Problem Statement #9
+Real-time Detection of Reel Traffic vs Non-reel Traffic in a Social-networking Application
+SNS applications (such as Facebook and YouTube), transmit both video (short videos, reels, etc.) and non-video traffic (feeds, suggestions, etc.) through the same data pipeline. Develop an AI model to differentiate reel / video traffic versus non-reel/video traffic in real-time, enabling user equipment (UE) to optimize performance dynamically. The model should also ensure accuracy under varying network congestion and coverage conditions.
+- **Team name** - DEBUGGERS
+- **Team members (Names)** - RISHIKA SINGH,YUVIKA GUPTA,DAKSH GARG
 - **Demo Video Link** - *(Upload the Demo video on Youtube as a public or unlisted video and share the link. Google Drive uploads or any other uploads are not allowed.)*
 
 
@@ -16,6 +18,4 @@
 - **Datasets Used** - *(Links to all datasets used in the project. You are permitted to use publicly available datasets under licenses like Creative Commons, Open Data Commons, or equivalent.)*
 - **Datasets Published** - *(Links to all datasets created for the project and published on Hugging Face. You are allowed to publish any synthetic or proprietary dataset used in their project, but will be responsible for any legal compliance and permission for the same. The dataset can be published under Creative Commons, Open Data Commons, or equivalent license.)*
 
-### Attribution 
 
-In case this project is built on top of an existing open source project, please provide the original project link here. Also, mention what new features were developed. Failing to attribute the source projects may lead to disqualification during the time of evaluation.
