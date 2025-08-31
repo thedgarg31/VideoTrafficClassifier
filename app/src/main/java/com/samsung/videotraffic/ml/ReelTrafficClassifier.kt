@@ -2,6 +2,7 @@ package com.samsung.videotraffic.ml
 
 import android.content.Context
 import android.util.Log
+import com.google.gson.Gson
 import com.samsung.videotraffic.model.ClassificationResult
 import com.samsung.videotraffic.model.TrafficFeatures
 import org.tensorflow.lite.Interpreter
@@ -11,20 +12,19 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.sqrt
-import kotlin.math.log
-import kotlin.math.abs
 
 /**
  * Advanced Reel Traffic Classifier for Samsung EnnovateX 2025
- * 
+ *
  * Features:
  * - Real-time classification of reel vs non-reel traffic
  * - Advanced network feature extraction
  * - Network robustness under varying conditions
  * - TensorFlow Lite with quantization support
  * - Fallback heuristic classification
- * 
+ *
  * Open Source Compliance:
  * - Uses only OSI-approved libraries
  * - No proprietary APIs or cloud services
@@ -88,14 +88,14 @@ class ReelTrafficClassifier(private val context: Context) {
                 setUseXNNPACK(true) // Enable XNNPACK for better performance
             }
             interpreter = Interpreter(modelBuffer, options)
-            
+
             // Load model information
             loadModelInfo()
-            
+
             isModelLoaded = true
             Log.d(TAG, "Reel Traffic Classifier loaded successfully")
             Log.d(TAG, "Model: ${modelInfo?.modelName}, Version: ${modelInfo?.version}")
-            
+
         } catch (e: Exception) {
             Log.w(TAG, "Could not load TensorFlow Lite model: ${e.message}")
             Log.w(TAG, "Using fallback heuristic classifier")
@@ -116,10 +116,11 @@ class ReelTrafficClassifier(private val context: Context) {
         try {
             val inputStream = context.assets.open(MODEL_INFO_FILE)
             val jsonString = inputStream.bufferedReader().use { it.readText() }
-            
-            // Parse JSON (simplified - in production use proper JSON library)
-            modelInfo = parseModelInfo(jsonString)
-            
+
+            // FIXED: Use Gson to correctly parse the JSON string
+            val gson = Gson()
+            modelInfo = gson.fromJson(jsonString, ModelInfo::class.java)
+
             // Initialize scaler
             modelInfo?.let { info ->
                 scaler = FeatureScaler(
@@ -128,41 +129,16 @@ class ReelTrafficClassifier(private val context: Context) {
                     info.scalerVar.toFloatArray()
                 )
             }
-            
+
             Log.d(TAG, "Model info loaded: ${modelInfo?.featureNames?.size} features")
-            
+
         } catch (e: Exception) {
             Log.w(TAG, "Could not load model info: ${e.message}")
         }
     }
 
-    private fun parseModelInfo(jsonString: String): ModelInfo {
-        // Simplified JSON parsing - in production use Gson or Jackson
-        // This is a basic implementation for demonstration
-        return ModelInfo(
-            modelName = "reel_traffic_mobile",
-            inputShape = listOf(1, INPUT_SIZE),
-            outputShape = listOf(1, OUTPUT_SIZE),
-            featureNames = listOf(
-                "packet_size_mean", "packet_size_std", "packet_size_entropy",
-                "inter_arrival_mean", "inter_arrival_std", "inter_arrival_entropy",
-                "burstiness", "flow_duration", "flow_churn_rate",
-                "tcp_handshake_time", "quic_handshake_time", "rtt_mean", "rtt_std",
-                "bitrate_mean", "bitrate_variance", "bitrate_entropy",
-                "session_duration", "data_volume", "packet_count",
-                "tcp_ratio", "udp_ratio", "http_ratio", "https_ratio",
-                "temporal_burst_pattern", "flow_level_entropy",
-                "congestion_window_size", "retransmission_rate",
-                "jitter_mean", "jitter_std", "packet_loss_rate"
-            ),
-            classNames = listOf("Non-Reel", "Reel", "Unknown"),
-            scalerMean = List(INPUT_SIZE) { 0f },
-            scalerScale = List(INPUT_SIZE) { 1f },
-            scalerVar = List(INPUT_SIZE) { 1f },
-            createdAt = "2025-01-01T00:00:00Z",
-            version = "1.0.0"
-        )
-    }
+    // The parseModelInfo function is now replaced by the logic in loadModelInfo
+    // so this function can be safely removed or ignored.
 
     fun classify(features: TrafficFeatures): ClassificationResult {
         return if (isModelLoaded) {
@@ -179,14 +155,14 @@ class ReelTrafficClassifier(private val context: Context) {
 
             // Extract advanced features
             val advancedFeatures = extractAdvancedFeatures(features)
-            
+
             // Normalize features using the trained scaler
             val normalizedFeatures = scaler.transform(advancedFeatures)
 
             // Prepare input buffer
             val inputBuffer = ByteBuffer.allocateDirect(INPUT_SIZE * 4)
             inputBuffer.order(ByteOrder.nativeOrder())
-            
+
             for (value in normalizedFeatures) {
                 inputBuffer.putFloat(value)
             }
@@ -199,7 +175,7 @@ class ReelTrafficClassifier(private val context: Context) {
             val startTime = System.currentTimeMillis()
             interpreter.run(inputBuffer, outputBuffer)
             val inferenceTime = System.currentTimeMillis() - startTime
-            
+
             if (inferenceTime > INFERENCE_TIMEOUT_MS) {
                 Log.w(TAG, "Inference took too long: ${inferenceTime}ms")
                 return classifyWithAdvancedHeuristics(features)
@@ -213,11 +189,11 @@ class ReelTrafficClassifier(private val context: Context) {
 
             // Apply softmax to get proper probabilities
             val softmaxOutput = softmax(floatArrayOf(nonReelProb, reelProb, unknownProb))
-            
+
             // Determine classification
             val maxIndex = softmaxOutput.indices.maxByOrNull { softmaxOutput[it] } ?: 2
             val confidence = softmaxOutput[maxIndex]
-            
+
             // Map output to classification
             val classification = when (maxIndex) {
                 0 -> ClassificationResult.Classification.NON_REEL
@@ -242,43 +218,43 @@ class ReelTrafficClassifier(private val context: Context) {
             features.packetSize,
             features.packetSizeVariation,
             calculateEntropy(listOf(features.packetSize, features.packetSizeVariation)),
-            
+
             // Inter-arrival time features
             features.packetInterval,
             features.averagePacketGap,
             calculateEntropy(listOf(features.packetInterval, features.averagePacketGap)),
-            
+
             // Burstiness and flow features
             features.burstiness,
             features.connectionDuration,
             calculateFlowChurnRate(features),
-            
+
             // Protocol timing features (simulated)
             estimateTcpHandshakeTime(features),
             estimateQuicHandshakeTime(features),
             estimateRttMean(features),
             estimateRttStd(features),
-            
+
             // Bitrate features
             features.bitrate,
             calculateBitrateVariance(features),
             calculateBitrateEntropy(features),
-            
+
             // Session features
             features.connectionDuration,
             features.dataVolume,
             estimatePacketCount(features),
-            
+
             // Protocol ratios
             features.tcpRatio,
             features.udpRatio,
             estimateHttpRatio(features),
             estimateHttpsRatio(features),
-            
+
             // Advanced patterns
             calculateTemporalBurstPattern(features),
             calculateFlowLevelEntropy(features),
-            
+
             // Network condition features
             estimateCongestionWindowSize(features),
             estimateRetransmissionRate(features),
@@ -348,7 +324,7 @@ class ReelTrafficClassifier(private val context: Context) {
             val avgBytesPerSecond = if (features.connectionDuration > 0) {
                 features.dataVolume / (features.connectionDuration / 1000f)
             } else 0f
-            
+
             when {
                 avgBytesPerSecond > 200_000 -> { // 200 KB/s - strong reel indicator
                     reelScore += 2f
@@ -406,10 +382,10 @@ class ReelTrafficClassifier(private val context: Context) {
         if (values.isEmpty()) return 0f
         val sum = values.sum()
         if (sum == 0f) return 0f
-        
+
         return -values.map { value ->
             val p = value / sum
-            if (p > 0) p * kotlin.math.ln(p.toDouble()) else 0.0
+            if (p > 0) p * ln(p.toDouble()) else 0.0
         }.sum().toFloat()
     }
 

@@ -18,7 +18,7 @@ class DataHistoryActivity : AppCompatActivity() {
     private lateinit var repository: TrafficDataRepository
     private lateinit var sessionAdapter: SessionHistoryAdapter
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    
+
     // UI Elements
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: View
@@ -33,7 +33,7 @@ class DataHistoryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         android.util.Log.d("DataHistoryActivity", "onCreate started")
-        
+
         try {
             setContentView(R.layout.activity_data_history_enhanced)
             android.util.Log.d("DataHistoryActivity", "Enhanced layout set successfully")
@@ -91,13 +91,13 @@ class DataHistoryActivity : AppCompatActivity() {
                 noDataText.visibility = View.GONE
                 statsCard.visibility = View.GONE
                 android.util.Log.d("DataHistoryActivity", "Loading sessions from database...")
-                
+
                 val sessions = withContext(Dispatchers.IO) {
                     repository.getAllSessionsList()
                 }
-                
+
                 android.util.Log.d("DataHistoryActivity", "Loaded ${sessions.size} sessions")
-                
+
                 if (sessions.isEmpty()) {
                     noDataText.visibility = View.VISIBLE
                     recyclerView.visibility = View.GONE
@@ -108,17 +108,17 @@ class DataHistoryActivity : AppCompatActivity() {
                     noDataText.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
                     statsCard.visibility = View.VISIBLE
-                    
+
                     // Update statistics
                     updateStatistics(sessions)
-                    
+
                     // Update session list
                     sessionAdapter.submitList(sessions)
                     android.util.Log.d("DataHistoryActivity", "Sessions loaded into adapter")
                 }
-                
+
                 progressBar.visibility = View.GONE
-                
+
             } catch (e: Exception) {
                 android.util.Log.e("DataHistoryActivity", "Error loading history data", e)
                 progressBar.visibility = View.GONE
@@ -130,18 +130,22 @@ class DataHistoryActivity : AppCompatActivity() {
 
     private fun updateStatistics(sessions: List<com.samsung.videotraffic.database.entity.MonitoringSession>) {
         val totalSessions = sessions.size
-        val totalPackets = sessions.sumOf { it.totalPackets }
-        val totalDuration = sessions.sumOf { it.durationMinutes }
-        
-        // Count traffic types
-        val reelCount = sessions.count { it.reelTrafficCount > 0 }
-        val nonReelCount = sessions.count { it.nonReelTrafficCount > 0 }
-        
+        // FIXED: Use the correct property 'totalPacketsAnalyzed'
+        val totalPackets = sessions.sumOf { it.totalPacketsAnalyzed }
+
+        // Calculate total duration manually
+        val totalDurationMs = sessions.sumOf { (it.endTime ?: System.currentTimeMillis()) - it.startTime }
+        val totalDurationMin = totalDurationMs / (1000 * 60)
+
+        // FIXED: Use the correct properties 'videoDetections' and 'nonVideoDetections'
+        val reelTrafficCount = sessions.sumOf { it.videoDetections }
+        val nonReelTrafficCount = sessions.sumOf { it.nonVideoDetections }
+
         totalSessionsText.text = "$totalSessions"
         totalPacketsText.text = "$totalPackets"
-        totalDurationText.text = "${totalDuration}min"
-        reelTrafficText.text = "$reelCount"
-        nonReelTrafficText.text = "$nonReelCount"
+        totalDurationText.text = "${totalDurationMin}min"
+        reelTrafficText.text = "$reelTrafficCount"
+        nonReelTrafficText.text = "$nonReelTrafficCount"
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

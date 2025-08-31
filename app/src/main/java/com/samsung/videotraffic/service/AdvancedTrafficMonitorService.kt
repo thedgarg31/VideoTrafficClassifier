@@ -27,18 +27,17 @@ import kotlin.math.exp
 import kotlin.random.Random
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.TimeUnit
 
 /**
  * Advanced Traffic Monitor Service for Samsung EnnovateX 2025
- * 
- * Features:
+ * * Features:
  * - Real-time packet-level traffic analysis
  * - Advanced network feature extraction
  * - Network condition monitoring (congestion, jitter, throttling)
  * - Privacy-compliant metadata-only inspection
  * - Robust classification under varying network conditions
- * 
- * Open Source Compliance:
+ * * Open Source Compliance:
  * - Uses only OSI-approved libraries
  * - No proprietary APIs or cloud services
  * - Local processing only
@@ -46,48 +45,48 @@ import java.util.concurrent.atomic.AtomicLong
 class AdvancedTrafficMonitorService : Service() {
 
     private val binder = LocalBinder()
-    
+
     private lateinit var classifier: ReelTrafficClassifier
     private lateinit var repository: TrafficDataRepository
     private var monitoringJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var currentSessionId: String? = null
-    
+
     // Advanced monitoring variables
     private var startTime = 0L
     private var lastMeasurementTime = 0L
     private var lastTotalBytes = 0L
     private var peakBitrate: Float = 0f
-    
+
     // Packet-level analysis
     private val packetSizes = ConcurrentLinkedQueue<Long>()
     private val packetIntervals = ConcurrentLinkedQueue<Long>()
     private val packetTimestamps = ConcurrentLinkedQueue<Long>()
     private val flowStats = mutableMapOf<String, FlowStatistics>()
-    
+
     // Network condition monitoring
     private var networkCondition = NetworkCondition.NORMAL
     private val rttHistory = ConcurrentLinkedQueue<Long>()
     private val jitterHistory = ConcurrentLinkedQueue<Float>()
     private val congestionHistory = ConcurrentLinkedQueue<Float>()
-    
+
     // LiveData for UI updates
     private val _classificationResult = MutableLiveData<ClassificationResult>()
     val classificationResult: LiveData<ClassificationResult> = _classificationResult
-    
+
     private val _trafficStats = MutableLiveData<AppTrafficStats>()
     val trafficStats: LiveData<AppTrafficStats> = _trafficStats
-    
+
     private val _networkCondition = MutableLiveData<NetworkCondition>()
     val networkConditionLive: LiveData<NetworkCondition> = _networkCondition
-    
+
     // Statistics counters
     private val totalBytesMonitored = AtomicLong(0)
     private val packetsAnalyzed = AtomicLong(0)
     private val reelDetections = AtomicLong(0)
     private val nonReelDetections = AtomicLong(0)
     private val unknownDetections = AtomicLong(0)
-    
+
     companion object {
         private const val CHANNEL_ID = "ADVANCED_TRAFFIC_MONITOR"
         private const val NOTIFICATION_ID = 2
@@ -126,7 +125,6 @@ class AdvancedTrafficMonitorService : Service() {
             classifier = ReelTrafficClassifier(this)
             repository = TrafficDataRepository.getInstance(this)
             startForeground(NOTIFICATION_ID, createNotification())
-            startMonitoring()
             Log.d(TAG, "Advanced Traffic Monitor Service created successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Service creation failed", e)
@@ -145,6 +143,7 @@ class AdvancedTrafficMonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        startMonitoring()
         return START_STICKY
     }
 
@@ -156,8 +155,11 @@ class AdvancedTrafficMonitorService : Service() {
     }
 
     fun startMonitoring() {
-        if (monitoringJob?.isActive == true) return
-        
+        if (monitoringJob?.isActive == true) {
+            Log.d(TAG, "Monitoring is already running.")
+            return
+        }
+
         serviceScope.launch {
             try {
                 currentSessionId = repository.startNewSession()
@@ -166,12 +168,12 @@ class AdvancedTrafficMonitorService : Service() {
                 Log.e(TAG, "Failed to start session", e)
             }
         }
-        
+
         startTime = System.currentTimeMillis()
         lastMeasurementTime = startTime
         lastTotalBytes = getCurrentTotalBytes()
         peakBitrate = 0f
-        
+
         // Start high-frequency traffic monitoring
         monitoringJob = serviceScope.launch {
             while (isActive) {
@@ -183,7 +185,7 @@ class AdvancedTrafficMonitorService : Service() {
                 }
             }
         }
-        
+
         // Start network condition monitoring
         serviceScope.launch {
             while (isActive) {
@@ -206,13 +208,13 @@ class AdvancedTrafficMonitorService : Service() {
                 Log.e(TAG, "Failed to end session", e)
             }
         }
-        
+
         monitoringJob?.cancel()
         monitoringJob = null
         currentSessionId = null
         stopSelf()
     }
-    
+
     fun isMonitoring(): Boolean {
         return monitoringJob?.isActive == true
     }
@@ -221,10 +223,14 @@ class AdvancedTrafficMonitorService : Service() {
         try {
             val currentTime = System.currentTimeMillis()
             val currentTotalBytes = getCurrentTotalBytes()
-            
+
             val timeDelta = currentTime - lastMeasurementTime
             val bytesDelta = currentTotalBytes - lastTotalBytes
-            
+
+            // Log all the critical values for debugging
+            Log.d(TAG, "DEBUG: analyzeTrafficAdvanced - timeDelta: $timeDelta ms, bytesDelta: $bytesDelta B")
+            Log.d(TAG, "DEBUG: currentTotalBytes: $currentTotalBytes, lastTotalBytes: $lastTotalBytes")
+
             // Update basic stats
             withContext(Dispatchers.Main) {
                 _trafficStats.value = AppTrafficStats(
@@ -234,28 +240,28 @@ class AdvancedTrafficMonitorService : Service() {
                     averagePacketSize = calculateAveragePacketSize()
                 )
             }
-            
+
             if (timeDelta > 0 && bytesDelta > 0) {
                 // Update counters
                 totalBytesMonitored.addAndGet(bytesDelta)
                 packetsAnalyzed.incrementAndGet()
-                
+
                 // Record packet-level data
                 recordPacketData(bytesDelta, timeDelta, currentTime)
-                
+
                 // Extract advanced features
                 val features = extractAdvancedTrafficFeatures(bytesDelta, timeDelta, currentTime)
-                
+
                 // Classify traffic
                 val result = classifier.classify(features)
-                
+
                 // Update detection counters
                 when (result.classification) {
                     ClassificationResult.Classification.REEL -> reelDetections.incrementAndGet()
                     ClassificationResult.Classification.NON_REEL -> nonReelDetections.incrementAndGet()
                     ClassificationResult.Classification.UNKNOWN -> unknownDetections.incrementAndGet()
                 }
-                
+
                 // Record classification in database
                 try {
                     repository.recordClassification(
@@ -268,12 +274,12 @@ class AdvancedTrafficMonitorService : Service() {
                         connectionDuration = features.connectionDuration,
                         dataVolume = features.dataVolume
                     )
-                    
+
                     // Update peak bitrate
                     if (features.bitrate > peakBitrate) {
                         peakBitrate = features.bitrate
                     }
-                    
+
                     // Update session stats
                     repository.updateSessionStats(
                         bytes = totalBytesMonitored.get(),
@@ -284,14 +290,15 @@ class AdvancedTrafficMonitorService : Service() {
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to record classification", e)
                 }
-                
+
                 // Update LiveData on main thread
                 withContext(Dispatchers.Main) {
                     _classificationResult.value = result
                 }
-                
+
                 Log.d(TAG, "Advanced traffic analysis: ${bytesDelta} bytes, ${result.classification}, network: $networkCondition")
             } else {
+                Log.d(TAG, "DEBUG: No new traffic detected.")
                 // No new traffic, send unknown result to keep UI updated
                 withContext(Dispatchers.Main) {
                     _classificationResult.value = ClassificationResult(
@@ -300,10 +307,10 @@ class AdvancedTrafficMonitorService : Service() {
                     )
                 }
             }
-            
+
             lastMeasurementTime = currentTime
             lastTotalBytes = currentTotalBytes
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Error in advanced traffic analysis", e)
             withContext(Dispatchers.Main) {
@@ -320,14 +327,14 @@ class AdvancedTrafficMonitorService : Service() {
         packetSizes.add(bytesDelta)
         packetIntervals.add(timeDelta)
         packetTimestamps.add(timestamp)
-        
+
         // Maintain history size
         while (packetSizes.size > PACKET_HISTORY_SIZE) {
             packetSizes.poll()
             packetIntervals.poll()
             packetTimestamps.poll()
         }
-        
+
         // Update flow statistics
         updateFlowStatistics(bytesDelta, timeDelta, timestamp)
     }
@@ -335,39 +342,39 @@ class AdvancedTrafficMonitorService : Service() {
     private fun updateFlowStatistics(bytesDelta: Long, timeDelta: Long, timestamp: Long) {
         // Create flow ID based on time window (simplified)
         val flowId = "flow_${timestamp / 10000}" // 10-second windows
-        
+
         val flowStats = this.flowStats.getOrPut(flowId) {
             FlowStatistics(flowId, startTime = timestamp)
         }
-        
+
         flowStats.apply {
             packetCount++
             totalBytes += bytesDelta
             lastSeen = timestamp
-            
+
             // Update averages
             avgPacketSize = (avgPacketSize * (packetCount - 1) + bytesDelta) / packetCount
             avgInterval = (avgInterval * (packetCount - 1) + timeDelta) / packetCount
-            
+
             // Update protocol ratios (simplified)
             tcpRatio = 0.8f + Random.nextFloat() * 0.2f
             udpRatio = 1f - tcpRatio
         }
-        
+
         // Calculate burstiness for this flow
         flowStats.burstiness = calculateBurstiness(flowId)
     }
 
     private fun calculateBurstiness(flowId: String): Float {
         val flow = flowStats[flowId] ?: return 1f
-        
+
         // Get recent intervals for this flow
         val recentIntervals = packetIntervals.toList().takeLast(50)
         if (recentIntervals.size < 2) return 1f
-        
+
         val mean = recentIntervals.average()
         val variance = recentIntervals.map { (it - mean) * (it - mean) }.average()
-        
+
         return if (variance > 0) {
             sqrt(variance).toFloat() / mean.toFloat()
         } else 1f
@@ -377,39 +384,39 @@ class AdvancedTrafficMonitorService : Service() {
         val bitrate = if (timeDelta > 0) (bytesDelta * 8.0f * 1000) / timeDelta else 0f
         val packetSize = bytesDelta.toFloat()
         val packetInterval = timeDelta.toFloat()
-        
+
         // Calculate advanced statistics from packet history
         val packetSizeList = packetSizes.toList()
         val intervalList = packetIntervals.toList()
-        
+
         val avgPacketSize = if (packetSizeList.isNotEmpty()) {
             packetSizeList.average().toFloat()
         } else packetSize
-        
+
         val avgPacketGap = if (intervalList.isNotEmpty()) {
             intervalList.average().toFloat()
         } else packetInterval
-        
+
         val packetSizeVariation = if (packetSizeList.size > 1) {
             val mean = packetSizeList.average()
             val variance = packetSizeList.map { (it - mean) * (it - mean) }.average()
             sqrt(variance).toFloat()
         } else 0f
-        
+
         // Calculate burstiness from recent data
         val burstiness = if (intervalList.size > 5) {
             val sortedIntervals = intervalList.sorted()
             val median = sortedIntervals[sortedIntervals.size / 2].toFloat()
             if (median > 0) packetInterval / median else 1f
         } else 1f
-        
+
         // Enhanced protocol ratios based on flow analysis
         val totalTcpRatio = flowStats.values.map { it.tcpRatio }.average().toFloat()
         val totalUdpRatio = flowStats.values.map { it.udpRatio }.average().toFloat()
-        
+
         val connectionDuration = (timestamp - startTime).toFloat()
         val dataVolume = totalBytesMonitored.get().toFloat()
-        
+
         return TrafficFeatures(
             packetSize = packetSize,
             bitrate = bitrate,
@@ -430,17 +437,17 @@ class AdvancedTrafficMonitorService : Service() {
             val currentRtt = estimateCurrentRTT()
             rttHistory.add(currentRtt)
             while (rttHistory.size > 100) rttHistory.poll()
-            
+
             // Analyze jitter
             val currentJitter = calculateCurrentJitter()
             jitterHistory.add(currentJitter)
             while (jitterHistory.size > 100) jitterHistory.poll()
-            
+
             // Analyze congestion
             val congestionLevel = calculateCongestionLevel()
             congestionHistory.add(congestionLevel)
             while (congestionHistory.size > 100) congestionHistory.poll()
-            
+
             // Determine network condition
             val newCondition = determineNetworkCondition()
             if (newCondition != networkCondition) {
@@ -450,7 +457,7 @@ class AdvancedTrafficMonitorService : Service() {
                 }
                 Log.d(TAG, "Network condition changed to: $networkCondition")
             }
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Error analyzing network conditions", e)
         }
@@ -467,7 +474,7 @@ class AdvancedTrafficMonitorService : Service() {
     private fun calculateCurrentJitter(): Float {
         val recentIntervals = packetIntervals.toList().takeLast(20)
         if (recentIntervals.size < 2) return 0f
-        
+
         val mean = recentIntervals.average()
         val variance = recentIntervals.map { (it - mean) * (it - mean) }.average()
         return sqrt(variance).toFloat()
@@ -477,10 +484,10 @@ class AdvancedTrafficMonitorService : Service() {
         // Calculate congestion level based on packet loss, retransmissions, and flow statistics
         val recentPacketSizes = packetSizes.toList().takeLast(50)
         if (recentPacketSizes.isEmpty()) return 0f
-        
+
         val avgPacketSize = recentPacketSizes.average()
         val expectedPacketSize = 1400.0 // Expected packet size for video
-        
+
         return if (avgPacketSize < expectedPacketSize * 0.7) {
             // Small packets suggest congestion
             (1.0 - avgPacketSize / expectedPacketSize).toFloat()
@@ -491,7 +498,7 @@ class AdvancedTrafficMonitorService : Service() {
         val avgRtt = rttHistory.toList().average()
         val avgJitter = jitterHistory.toList().average()
         val avgCongestion = congestionHistory.toList().average()
-        
+
         return when {
             avgCongestion > 0.3 -> NetworkCondition.CONGESTION
             avgJitter > 20.0 -> NetworkCondition.JITTER
@@ -539,7 +546,7 @@ class AdvancedTrafficMonitorService : Service() {
         val rttList = rttHistory.toList()
         val jitterList = jitterHistory.toList()
         val congestionList = congestionHistory.toList()
-        
+
         return mapOf(
             "current_condition" to networkCondition.name,
             "avg_rtt" to (if (rttList.isNotEmpty()) rttList.average() else 0.0),
@@ -559,7 +566,7 @@ class AdvancedTrafficMonitorService : Service() {
             ).apply {
                 description = "Advanced network traffic monitoring for reel classification"
             }
-            
+
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
@@ -574,7 +581,7 @@ class AdvancedTrafficMonitorService : Service() {
             .setOngoing(true)
             .build()
     }
-    
+
     private fun createErrorNotification(errorMessage: String?): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Advanced Traffic Classifier - Error")

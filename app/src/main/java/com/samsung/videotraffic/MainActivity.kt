@@ -4,24 +4,31 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.button.MaterialButton
 import com.samsung.videotraffic.activity.DataHistoryActivity
+import com.samsung.videotraffic.repository.TrafficDataRepository
 import com.samsung.videotraffic.service.AdvancedTrafficMonitorService
 import com.samsung.videotraffic.service.BatteryMonitorService
 import com.samsung.videotraffic.viewmodel.MainViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
-    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + kotlinx.coroutines.SupervisorJob())
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private lateinit var statusText: TextView
     private lateinit var startButton: MaterialButton
     private lateinit var stopButton: MaterialButton
@@ -100,9 +107,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.confidence.observe(this) { confidence ->
             updateConfidenceDisplay(confidence)
         }
-
-        // Start periodic data refresh
-        startPeriodicDataRefresh()
     }
 
     private fun setupClickListeners() {
@@ -118,24 +122,23 @@ class MainActivity : AppCompatActivity() {
 
         historyButton.setOnClickListener {
             try {
-                android.util.Log.d("MainActivity", "History button clicked")
+                Log.d("MainActivity", "History button clicked")
                 val intent = Intent(this, DataHistoryActivity::class.java)
                 startActivity(intent)
-                android.util.Log.d("MainActivity", "DataHistoryActivity intent started")
+                Log.d("MainActivity", "DataHistoryActivity intent started")
             } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Error starting DataHistoryActivity", e)
-                // Show a simple toast message to the user
-                android.widget.Toast.makeText(this, "Error opening history: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error starting DataHistoryActivity", e)
+                Toast.makeText(this, "Error opening history: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
 
         shareButton.setOnClickListener {
             try {
-                android.util.Log.d("MainActivity", "Share button clicked")
+                Log.d("MainActivity", "Share button clicked")
                 shareData()
             } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Error sharing data", e)
-                android.widget.Toast.makeText(this, "Error sharing data: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error sharing data", e)
+                Toast.makeText(this, "Error sharing data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -229,17 +232,22 @@ class MainActivity : AppCompatActivity() {
     private fun shareData() {
         scope.launch {
             try {
+                val repository = TrafficDataRepository.getInstance(this@MainActivity)
+                val sessions = withContext(Dispatchers.IO) {
+                    repository.getAllSessionsList()
+                }
+
                 val report = buildString {
                     appendLine("📊 Video Traffic Classifier - Data Report")
-                    appendLine("Generated: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}")
+                    appendLine("Generated: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
                     appendLine()
-                    
+
                     // Current status
                     viewModel.isMonitoring.value?.let { isMonitoring ->
                         appendLine("🔍 Monitoring Status: ${if (isMonitoring) "ACTIVE" else "STOPPED"}")
                     }
                     appendLine()
-                    
+
                     // Battery stats
                     viewModel.batteryStats.value?.let { stats ->
                         appendLine("🔋 Battery Statistics:")
@@ -249,7 +257,7 @@ class MainActivity : AppCompatActivity() {
                         appendLine("   • Drain Rate: ${String.format("%.2f", stats.batteryDrainPerMinute)}%/min")
                         appendLine()
                     }
-                    
+
                     // Classification results
                     viewModel.currentClassification.value?.let { classification ->
                         appendLine("🎯 Current Classification: $classification")
@@ -258,63 +266,59 @@ class MainActivity : AppCompatActivity() {
                         appendLine("📈 Confidence: ${String.format("%.1f", confidence)}%")
                     }
                     appendLine()
-                    
+
                     // Network stats
                     viewModel.networkStats.value?.let { stats ->
                         appendLine("🌐 Network Statistics:")
                         appendLine("   • $stats")
                         appendLine()
                     }
-                    
+
                     // Session history
-                    try {
-                        val repository = com.samsung.videotraffic.repository.TrafficDataRepository.getInstance(this@MainActivity)
-                        val sessions = withContext(Dispatchers.IO) {
-                            repository.getAllSessionsList()
+                    if (sessions.isNotEmpty()) {
+                        appendLine("📋 Session History (Last 5 sessions):")
+                        sessions.take(5).forEach { session ->
+                            // Calculate duration manually from start and end times
+                            val durationMs = (session.endTime ?: System.currentTimeMillis()) - session.startTime
+                            val durationMin = durationMs / (1000 * 60)
+
+                            appendLine("   • Session ${session.id}: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(session.startTime))}")
+                            // FIXED: Use the correct properties 'totalPacketsAnalyzed'
+                            appendLine("     Duration: ${durationMin} min, Packets: ${session.totalPacketsAnalyzed}")
                         }
-                        
-                        if (sessions.isNotEmpty()) {
-                            appendLine("📋 Session History (Last 5 sessions):")
-                            sessions.take(5).forEach { session ->
-                                appendLine("   • Session ${session.id}: ${session.startTime} - ${session.endTime ?: "Ongoing"}")
-                                appendLine("Duration: ${session.durationMinutes} min, Packets: ${session.totalPackets}")
-                            }
-                        } else {
-                            appendLine("📋 No sessions recorded yet")
-                        }
-                    } catch (e: Exception) {
-                        appendLine("📋 Session data unavailable: ${e.message}")
+                    } else {
+                        appendLine("📋 No sessions recorded yet")
                     }
-                    
+
                     appendLine()
                     appendLine("📱 App: Video Traffic Classifier")
                     appendLine("🔗 GitHub: https://github.com/thedgarg31/VideoTrafficClassifier")
                 }
-                
-                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+
+                val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
-                    putExtra(android.content.Intent.EXTRA_SUBJECT, "Video Traffic Classifier - Data Report")
-                    putExtra(android.content.Intent.EXTRA_TEXT, report)
+                    putExtra(Intent.EXTRA_SUBJECT, "Video Traffic Classifier - Data Report")
+                    putExtra(Intent.EXTRA_TEXT, report)
                 }
-                
-                startActivity(android.content.Intent.createChooser(intent, "Share Data Report"))
-                
+
+                startActivity(Intent.createChooser(intent, "Share Data Report"))
+
             } catch (e: Exception) {
-                android.util.Log.e("MainActivity", "Error creating share report", e)
-                android.widget.Toast.makeText(this@MainActivity, "Error creating report: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error creating share report", e)
+                Toast.makeText(this@MainActivity, "Error creating report: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun checkPermissions(): Boolean {
         val permissionsToRequest = mutableListOf<String>()
-        
+
         for (permission in REQUIRED_PERMISSIONS) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(permission)
             }
         }
-        
+
         if (permissionsToRequest.isNotEmpty()) {
             ActivityCompat.requestPermissions(
                 this,
@@ -323,7 +327,7 @@ class MainActivity : AppCompatActivity() {
             )
             return false
         }
-        
+
         return true
     }
 
@@ -333,7 +337,7 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 // All permissions granted, can start monitoring
@@ -342,24 +346,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
-    }
-
-    private fun startPeriodicDataRefresh() {
-        scope.launch {
-            while (true) {
-                delay(2000) // Refresh every 2 seconds
-                refreshDisplayData()
-            }
-        }
-    }
-
-    private fun refreshDisplayData() {
-        // Force refresh of all displayed data
-        viewModel.refreshData()
     }
 
     private fun updateConfidenceDisplay(confidence: Float?) {
